@@ -71,6 +71,33 @@ func LoadKeyFromPEMFile(publicKeyFilePath, privateKeyFilePath string, ParseKey f
 	return ParseKey(puk.Bytes, prk.Bytes)
 }
 
+//Eason Lin
+func LoadKeyFromPEMByte(pukBytes, prkBytes []byte, ParseKey func([]byte, []byte) (Key, error)) (Key, error) {
+	puk, _ := pem.Decode(pukBytes)
+	if puk == nil {
+		return nil, errors.New("publicKey is not pem formate")
+	}
+
+	prk, _ := pem.Decode(prkBytes)
+	if prk == nil {
+		return nil, errors.New("privateKey is not pem formate")
+	}
+
+	return ParseKey(puk.Bytes, prk.Bytes)
+}
+
+func ParsePKCS1KeyByCert(publicKey, privateKey []byte) (Key, error) {
+	puk, err := x509.ParseCertificate(publicKey)
+	if err != nil {
+		return nil, err
+	}
+	prk, err := x509.ParsePKCS1PrivateKey(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	return &key{publicKey: puk.PublicKey.(*rsa.PublicKey), privateKey: prk}, nil
+}
+
 type key struct {
 	publicKey  *rsa.PublicKey
 	privateKey *rsa.PrivateKey
